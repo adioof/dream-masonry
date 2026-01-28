@@ -7,11 +7,12 @@ A high-performance virtualized masonry grid for React. Built with Float64Array-b
 - **Float64Array layout engine** — Column height tracking uses typed arrays for faster numeric operations than plain JavaScript arrays
 - **Virtualized rendering** — Only items within the viewport (plus configurable overscan) are rendered to the DOM
 - **GPU-accelerated positioning** — Items use `translate3d` transforms and CSS containment (`contain: strict` on container, `layout style paint` on items)
-- **Hysteresis-based scroll updates** — 100px threshold prevents re-render thrashing during scroll (configurable)
+- **Hysteresis-based scroll updates** — Configurable threshold prevents re-render thrashing during scroll
 - **RAF-throttled scroll handler** — At most one layout update per animation frame
 - **Built-in infinite scroll** — Optional pagination hook with debounce and threshold control
 - **Custom scroll containers** — Works with `window` or any scrollable element via ref
 - **Headless hooks** — Use the layout engine without the component for fully custom rendering
+- **Fully configurable** — Gutter size, column counts, column widths, scroll thresholds, and overscan are all customizable
 - **Tiny bundle** — ~12KB with no dependencies beyond React
 
 ## Install
@@ -24,7 +25,6 @@ npm install dream-grid
 
 ```tsx
 import { DreamGrid } from 'dream-grid';
-import 'dream-grid/styles.css';
 
 type Photo = {
   id: string;
@@ -73,11 +73,27 @@ function InfiniteGallery() {
       hasMore={hasMore}
       isFetchingMore={loading}
       onLoadMore={loadMore}
+      scrollThreshold={2000}
       renderLoader={() => <div>Loading...</div>}
       renderEmpty={() => <div>No photos yet</div>}
     />
   );
 }
+```
+
+## Custom Layout
+
+```tsx
+<DreamGrid
+  items={items}
+  renderItem={(item) => <Card item={item} />}
+  maxColumnCount={6}
+  minColumnCount={1}
+  minColumnWidth={180}
+  gutterSize={8}
+  overscan={1200}
+  hysteresis={50}
+/>
 ```
 
 ## Custom Scroll Container
@@ -109,7 +125,11 @@ function CustomGrid({ items }) {
   const { containerRef, dimensions, visibleItems, totalHeight } = useGrid({
     items,
     maxColumnCount: 4,
+    minColumnCount: 2,
+    minColumnWidth: 200,
+    gutterSize: 12,
     overscan: 800,
+    hysteresis: 50,
   });
 
   return (
@@ -145,6 +165,7 @@ function LayoutDebugger({ items, width }) {
     items,
     containerWidth: width,
     maxColumnCount: 3,
+    gutterSize: 10,
   });
 
   // positions is an array of { column, top, left, height } for each item
@@ -172,9 +193,12 @@ useInfiniteScroll({
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `items` | `T[]` | required | Array of items. Each must have `id: string` and optionally `width`/`height` for aspect ratio |
+| `items` | `T[]` | required | Array of items. Each must have `id: string` and optionally `width`/`height` or `aspectRatio` |
 | `renderItem` | `(item: T, index: number) => ReactNode` | required | Render function for each grid cell |
 | `maxColumnCount` | `number` | `5` | Maximum number of columns |
+| `minColumnCount` | `number` | `2` | Minimum number of columns |
+| `minColumnWidth` | `number` | `240` | Minimum column width in pixels before reducing column count |
+| `gutterSize` | `number` | `1.5` | Gap between items in pixels |
 | `isLoading` | `boolean` | `false` | Show loader state |
 | `hasMore` | `boolean` | `false` | Whether more items can be loaded |
 | `isFetchingMore` | `boolean` | `false` | Whether a load is in progress |
@@ -182,10 +206,39 @@ useInfiniteScroll({
 | `scrollContainer` | `MutableRefObject<HTMLElement>` | — | Custom scroll container (defaults to window) |
 | `overscan` | `number` | `1000` | Pixels above/below viewport to pre-render |
 | `hysteresis` | `number` | `100` | Minimum scroll distance before re-calculating visible items |
+| `scrollThreshold` | `number` | `1500` | Distance from bottom in pixels to trigger `onLoadMore` |
 | `renderLoader` | `() => ReactNode` | — | Custom loading state |
 | `renderEmpty` | `() => ReactNode` | — | Custom empty state |
 | `className` | `string` | — | Container class |
 | `style` | `CSSProperties` | — | Container style (merged with internal styles) |
+
+### `useGrid` Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `items` | `T[]` | required | Array of grid items |
+| `maxColumnCount` | `number` | `5` | Maximum columns |
+| `minColumnCount` | `number` | `2` | Minimum columns |
+| `minColumnWidth` | `number` | `240` | Minimum column width in px |
+| `gutterSize` | `number` | `1.5` | Gap between items in px |
+| `overscan` | `number` | `1000` | Pre-render buffer in px |
+| `hysteresis` | `number` | `100` | Scroll threshold before update |
+| `scrollContainer` | `RefObject<HTMLElement>` | — | Custom scroll element |
+
+Returns: `{ containerRef, dimensions, positions, totalHeight, visibleItems, validItems }`
+
+### `usePositioner` Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `items` | `T[]` | required | Array of grid items |
+| `containerWidth` | `number` | required | Container width in px |
+| `maxColumnCount` | `number` | `5` | Maximum columns |
+| `minColumnCount` | `number` | `2` | Minimum columns |
+| `minColumnWidth` | `number` | `240` | Minimum column width in px |
+| `gutterSize` | `number` | `1.5` | Gap between items in px |
+
+Returns: `{ dimensions, positions, totalHeight, validItems }`
 
 ### Item Shape
 
@@ -207,10 +260,10 @@ The grid resolves item height in this order:
 
 ## How It Works
 
-1. **Column calculation** — Container width is divided into columns with a minimum width of 240px (with 1.5px gutters)
-2. **Masonry positioning** — Items are placed in the shortest column using Float64Array for O(items × columns) layout
+1. **Column calculation** — Container width is divided into columns respecting `minColumnWidth`, `minColumnCount`, and `maxColumnCount` constraints, with configurable `gutterSize` gaps
+2. **Masonry positioning** — Items are placed in the shortest column using Float64Array for O(items x columns) layout
 3. **Viewport culling** — Only items intersecting `[scrollTop - overscan, scrollTop + viewportHeight + overscan]` are rendered
-4. **Scroll throttling** — A `requestAnimationFrame` loop checks scroll position, but only triggers a React update when the viewport moves more than the hysteresis threshold (default 100px)
+4. **Scroll throttling** — A `requestAnimationFrame` loop checks scroll position, but only triggers a React update when the viewport moves more than the `hysteresis` threshold
 5. **Resize handling** — A debounced `ResizeObserver` recalculates column dimensions when the container width changes
 
 ## License

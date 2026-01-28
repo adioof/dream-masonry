@@ -17,6 +17,9 @@ const RESIZE_DEBOUNCE_MS = 100;
 interface UseGridOptions<T extends GridItem> {
   items: T[];
   maxColumnCount?: number;
+  minColumnCount?: number;
+  minColumnWidth?: number;
+  gutterSize?: number;
   overscan?: number;
   hysteresis?: number;
   scrollContainer?: { readonly current: HTMLElement | null };
@@ -25,6 +28,9 @@ interface UseGridOptions<T extends GridItem> {
 export function useGrid<T extends GridItem>({
   items,
   maxColumnCount = 5,
+  minColumnCount = 2,
+  minColumnWidth,
+  gutterSize,
   overscan = 1000,
   hysteresis = 100,
   scrollContainer,
@@ -44,7 +50,7 @@ export function useGrid<T extends GridItem>({
     let timeout: ReturnType<typeof setTimeout>;
 
     const update = () => {
-      const dims = calculateDimensions(container.offsetWidth, maxColumnCount);
+      const dims = calculateDimensions(container.offsetWidth, maxColumnCount, minColumnCount, minColumnWidth, gutterSize);
       setDimensions((prev) => {
         if (
           prev?.columnCount === dims?.columnCount &&
@@ -70,7 +76,7 @@ export function useGrid<T extends GridItem>({
       clearTimeout(timeout);
       observer.disconnect();
     };
-  }, [maxColumnCount]);
+  }, [maxColumnCount, minColumnCount, minColumnWidth, gutterSize]);
 
   const validItems = useMemo(() => filterValidItems(items), [items]);
 
@@ -78,8 +84,8 @@ export function useGrid<T extends GridItem>({
     if (!dimensions || validItems.length === 0) {
       return { positions: EMPTY_ARRAY, totalHeight: 0 };
     }
-    return calculatePositions(validItems, dimensions);
-  }, [validItems, dimensions]);
+    return calculatePositions(validItems, dimensions, gutterSize);
+  }, [validItems, dimensions, gutterSize]);
 
   const visibleItems = useMemo(
     () =>

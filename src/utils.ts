@@ -10,15 +10,18 @@ import { GUTTER_SIZE, MIN_COLUMN_WIDTH } from './types';
 export function calculateDimensions(
   containerWidth: number,
   maxColumnCount: number,
+  minColumnCount: number = 2,
+  minColumnWidth: number = MIN_COLUMN_WIDTH,
+  gutterSize: number = GUTTER_SIZE,
 ): Dimensions | null {
   if (containerWidth === 0) return null;
 
   const columnCount = Math.min(
     maxColumnCount,
-    Math.max(2, Math.floor(containerWidth / (MIN_COLUMN_WIDTH + GUTTER_SIZE))),
+    Math.max(minColumnCount, Math.floor(containerWidth / (minColumnWidth + gutterSize))),
   );
   const columnWidth =
-    (containerWidth - (columnCount - 1) * GUTTER_SIZE) / columnCount;
+    (containerWidth - (columnCount - 1) * gutterSize) / columnCount;
 
   return { columnCount, columnWidth };
 }
@@ -26,12 +29,13 @@ export function calculateDimensions(
 export function calculatePositions<T extends { width?: number; height?: number; aspectRatio?: number }>(
   items: T[],
   dimensions: Dimensions,
+  gutterSize: number = GUTTER_SIZE,
 ): { positions: Position[]; totalHeight: number } {
   const { columnCount, columnWidth } = dimensions;
   const columnHeights = new Float64Array(columnCount);
 
   const colLefts = new Float64Array(columnCount);
-  const colStep = columnWidth + GUTTER_SIZE;
+  const colStep = columnWidth + gutterSize;
   for (let c = 0; c < columnCount; c++) {
     colLefts[c] = c * colStep;
   }
@@ -63,14 +67,14 @@ export function calculatePositions<T extends { width?: number; height?: number; 
     const top = columnHeights[column];
 
     positions[i] = { column, top, height, left: colLefts[column] };
-    columnHeights[column] = top + height + GUTTER_SIZE;
+    columnHeights[column] = top + height + gutterSize;
   }
 
   const maxHeight = Math.max(...columnHeights);
 
   return {
     positions,
-    totalHeight: maxHeight > 0 ? maxHeight - GUTTER_SIZE : 0,
+    totalHeight: maxHeight > 0 ? maxHeight - gutterSize : 0,
   };
 }
 

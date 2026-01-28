@@ -2,7 +2,10 @@ import React, { memo } from 'react';
 import { GridItem as GridItemComponent } from './components/GridItem';
 import { useGrid } from './hooks/use-grid';
 import { useInfiniteScroll } from './hooks/use-infinite-scroll';
+import { injectStyles } from './inject-styles';
 import type { DreamGridProps, GridItem } from './types';
+
+injectStyles();
 
 const NOOP = () => {};
 
@@ -10,6 +13,9 @@ const DreamGrid = <T extends GridItem>({
   items,
   renderItem,
   maxColumnCount = 5,
+  minColumnCount,
+  minColumnWidth,
+  gutterSize,
   isLoading = false,
   isFetchingMore = false,
   hasMore = false,
@@ -17,6 +23,7 @@ const DreamGrid = <T extends GridItem>({
   scrollContainer,
   overscan = 1000,
   hysteresis = 100,
+  scrollThreshold = 1500,
   renderLoader,
   renderEmpty,
   className,
@@ -30,6 +37,9 @@ const DreamGrid = <T extends GridItem>({
   } = useGrid({
     items,
     maxColumnCount,
+    minColumnCount,
+    minColumnWidth,
+    gutterSize,
     overscan,
     hysteresis,
     scrollContainer,
@@ -41,7 +51,7 @@ const DreamGrid = <T extends GridItem>({
     hasNextPage: hasMore,
     isFetchingNextPage: isFetchingMore,
     enabled: !!onLoadMore && hasMore,
-    threshold: 1500,
+    threshold: scrollThreshold,
     useWindow: !scrollContainer,
     dependencies: [items.length],
   });

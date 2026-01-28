@@ -11,14 +11,13 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    },
-    "./styles.css": "./dist/dream-grid.css"
+    }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup && cp src/dream-grid.css dist/dream-grid.css",
+    "build": "tsup",
     "dev": "tsup --watch",
     "check-types": "tsc --noEmit",
     "test": "vitest run",

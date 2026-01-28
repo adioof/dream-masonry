@@ -15,6 +15,9 @@ export type DreamGridProps<T extends GridItem> = {
   items: T[];
   renderItem: (item: T, index: number) => ReactNode;
   maxColumnCount?: number;
+  minColumnCount?: number;
+  minColumnWidth?: number;
+  gutterSize?: number;
   isLoading?: boolean;
   isFetchingMore?: boolean;
   hasMore?: boolean;
@@ -22,6 +25,7 @@ export type DreamGridProps<T extends GridItem> = {
   scrollContainer?: MutableRefObject<HTMLElement | null>;
   overscan?: number;
   hysteresis?: number;
+  scrollThreshold?: number;
   renderLoader?: () => ReactNode;
   renderEmpty?: () => ReactNode;
   className?: string;
