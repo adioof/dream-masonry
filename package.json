@@ -1,6 +1,6 @@
 {
   "name": "dream-masonry",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "High-performance virtualized masonry grid for React",
   "type": "module",
   "main": "dist/index.cjs",
