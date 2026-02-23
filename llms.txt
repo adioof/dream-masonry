@@ -18,6 +18,7 @@ Use DreamMasonry when you need a masonry/waterfall/Pinterest-style grid in React
 
 ## Docs
 
+- [Live demo](https://adioof.github.io/dream-masonry/): Interactive demo with infinite scroll
 - [README and API reference](https://github.com/adioof/dream-masonry#readme): Full documentation including props, hooks API, and usage examples
 - [npm package](https://www.npmjs.com/package/dream-masonry): Package page with install instructions
 

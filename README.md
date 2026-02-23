@@ -8,6 +8,8 @@
 
 Virtualized masonry grid for React. Handles 10,000+ items without breaking a sweat — only the visible ones get rendered.
 
+**[Live demo](https://adioof.github.io/dream-masonry/)**
+
 If you've ever tried building a Pinterest-style layout and hit a wall with scroll performance, this is for you.
 
 ## Install
