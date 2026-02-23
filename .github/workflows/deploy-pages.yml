@@ -27,7 +27,7 @@ jobs:
           version: 9
       - run: pnpm install
       - run: pnpm build
-      - run: cd demo && pnpm install && pnpm build
+      - run: cd demo && pnpm install --no-frozen-lockfile && pnpm build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: demo/dist
