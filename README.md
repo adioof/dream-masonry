@@ -1,38 +1,14 @@
 # DreamMasonry
 
 [![npm version](https://img.shields.io/npm/v/dream-masonry.svg)](https://www.npmjs.com/package/dream-masonry)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/dream-masonry)](https://bundlephobia.com/package/dream-masonry)
+[![npm downloads](https://img.shields.io/npm/dm/dream-masonry.svg)](https://www.npmjs.com/package/dream-masonry)
 [![license](https://img.shields.io/npm/l/dream-masonry.svg)](https://github.com/adioof/dream-masonry/blob/main/LICENSE)
 
-A high-performance **virtualized masonry grid layout** for React. Create Pinterest-style layouts, image galleries, and card grids with **infinite scroll** and **virtual rendering** for buttery smooth performance with 10,000+ items.
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/adioof)
 
-**Perfect for:** Photo galleries, Pinterest clones, card layouts, image grids, portfolio sites, e-commerce product grids, and any masonry/waterfall layout.
+Virtualized masonry grid for React. Handles 10,000+ items without breaking a sweat — only the visible ones get rendered.
 
-## Why DreamMasonry?
-
-| Feature | DreamMasonry | Masonic | react-masonry-css |
-|---------|--------------|---------|-------------------|
-| Virtualized rendering | Yes | Yes | No |
-| Infinite scroll built-in | Yes | No | No |
-| Float64Array layout | Yes | No | No |
-| Bundle size | ~12KB | ~14KB | ~3KB |
-| Responsive columns | Yes | Yes | Yes |
-| Custom scroll container | Yes | Yes | No |
-| Headless hooks | Yes | Yes | No |
-| Zero dependencies | Yes | No | Yes |
-
-## Features
-
-- **Float64Array layout engine** — Column height tracking uses typed arrays for faster numeric operations than plain JavaScript arrays
-- **Virtualized rendering** — Only items within the viewport (plus configurable overscan) are rendered to the DOM
-- **GPU-accelerated positioning** — Items use `translate3d` transforms and CSS containment (`contain: strict` on container, `layout style paint` on items)
-- **Hysteresis-based scroll updates** — Configurable threshold prevents re-render thrashing during scroll
-- **RAF-throttled scroll handler** — At most one layout update per animation frame
-- **Built-in infinite scroll** — Optional pagination hook with debounce and threshold control
-- **Custom scroll containers** — Works with `window` or any scrollable element via ref
-- **Headless hooks** — Use the layout engine without the component for fully custom rendering
-- **Fully configurable** — Gutter size, column counts, column widths, scroll thresholds, and overscan are all customizable
-- **Tiny bundle** — ~12KB with no dependencies beyond React
+If you've ever tried building a Pinterest-style layout and hit a wall with scroll performance, this is for you.
 
 ## Install
 
@@ -45,14 +21,7 @@ npm install dream-masonry
 ```tsx
 import { DreamMasonry } from 'dream-masonry';
 
-type Photo = {
-  id: string;
-  src: string;
-  width: number;
-  height: number;
-};
-
-function Gallery({ photos }: { photos: Photo[] }) {
+function Gallery({ photos }) {
   return (
     <DreamMasonry
       items={photos}
@@ -69,130 +38,78 @@ function Gallery({ photos }: { photos: Photo[] }) {
 }
 ```
 
+Items just need an `id` and either `width`/`height` or an `aspectRatio`. If you pass neither, they render as squares.
+
+## Why this over Masonic / react-masonry-css?
+
+Honest comparison:
+
+- **react-masonry-css** is great if you don't need virtualization. It's tiny (~3KB) and CSS-only. But it renders everything to the DOM, so it chokes on large lists.
+- **Masonic** does virtualization, but doesn't ship infinite scroll and has a bigger bundle with dependencies.
+- **DreamMasonry** virtualizes, has built-in infinite scroll, uses `Float64Array` for layout math, and ships at ~13KB with zero dependencies (besides React).
+
+Pick whatever fits. If you need virtualization + infinite scroll out of the box, that's where this library lives.
+
 ## Infinite Scroll
-
-```tsx
-function InfiniteGallery() {
-  const [items, setItems] = useState<Photo[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(false);
-
-  const loadMore = async () => {
-    setLoading(true);
-    const next = await fetchPhotos(items.length);
-    setItems((prev) => [...prev, ...next.data]);
-    setHasMore(next.hasMore);
-    setLoading(false);
-  };
-
-  return (
-    <DreamMasonry
-      items={items}
-      renderItem={(photo) => <img src={photo.src} alt="" />}
-      hasMore={hasMore}
-      isFetchingMore={loading}
-      onLoadMore={loadMore}
-      scrollThreshold={2000}
-      renderLoader={() => <div>Loading...</div>}
-      renderEmpty={() => <div>No photos yet</div>}
-    />
-  );
-}
-```
-
-## Custom Layout
 
 ```tsx
 <DreamMasonry
   items={items}
-  renderItem={(item) => <Card item={item} />}
-  maxColumnCount={6}
-  minColumnCount={1}
-  minColumnWidth={180}
-  gutterSize={8}
-  overscan={1200}
-  hysteresis={50}
+  renderItem={(photo) => <img src={photo.src} alt="" />}
+  hasMore={hasMore}
+  isFetchingMore={loading}
+  onLoadMore={loadMore}
+  scrollThreshold={2000}
+  renderLoader={() => <div>Loading...</div>}
+  renderEmpty={() => <div>No photos yet</div>}
 />
 ```
 
 ## Custom Scroll Container
 
-```tsx
-function ScrollablePanel() {
-  const scrollRef = useRef<HTMLDivElement>(null);
+Works with `window` by default, or pass any scrollable element:
 
-  return (
-    <div ref={scrollRef} style={{ height: '100vh', overflow: 'auto' }}>
-      <DreamMasonry
-        items={items}
-        renderItem={(item) => <Card item={item} />}
-        scrollContainer={scrollRef}
-      />
-    </div>
-  );
-}
+```tsx
+const scrollRef = useRef<HTMLDivElement>(null);
+
+<div ref={scrollRef} style={{ height: '100vh', overflow: 'auto' }}>
+  <DreamMasonry
+    items={items}
+    renderItem={(item) => <Card item={item} />}
+    scrollContainer={scrollRef}
+  />
+</div>
 ```
 
-## Headless Usage
+## Headless Hooks
 
-### `useGrid` — Full virtualization without the component
+Don't want the component? Use the hooks directly.
+
+**`useGrid`** — full virtualization, you control the markup:
 
 ```tsx
 import { useGrid } from 'dream-masonry';
 
-function CustomGrid({ items }) {
-  const { containerRef, dimensions, visibleItems, totalHeight } = useGrid({
-    items,
-    maxColumnCount: 4,
-    minColumnCount: 2,
-    minColumnWidth: 200,
-    gutterSize: 12,
-    overscan: 800,
-    hysteresis: 50,
-  });
-
-  return (
-    <div
-      ref={containerRef}
-      style={{ height: totalHeight, position: 'relative' }}
-    >
-      {visibleItems.map(({ item, pos, transform }) => (
-        <div
-          key={item.id}
-          style={{
-            position: 'absolute',
-            transform,
-            width: dimensions!.columnWidth,
-            height: pos.height,
-          }}
-        >
-          <YourComponent item={item} />
-        </div>
-      ))}
-    </div>
-  );
-}
+const { containerRef, visibleItems, totalHeight } = useGrid({
+  items,
+  maxColumnCount: 4,
+  gutterSize: 12,
+});
 ```
 
-### `usePositioner` — Layout math only, no DOM
+**`usePositioner`** — layout math only, no DOM involved. Good for SSR, canvas, or testing:
 
 ```tsx
 import { usePositioner } from 'dream-masonry';
 
-function LayoutDebugger({ items, width }) {
-  const { positions, totalHeight, dimensions } = usePositioner({
-    items,
-    containerWidth: width,
-    maxColumnCount: 3,
-    gutterSize: 10,
-  });
-
-  // positions is an array of { column, top, left, height } for each item
-  // Use for canvas rendering, SSR, testing, or anything non-DOM
-}
+const { positions, totalHeight } = usePositioner({
+  items,
+  containerWidth: 800,
+  maxColumnCount: 3,
+});
 ```
 
-### `useInfiniteScroll` — Standalone pagination
+**`useInfiniteScroll`** — standalone infinite scroll, use it with anything:
 
 ```tsx
 import { useInfiniteScroll } from 'dream-masonry';
@@ -202,89 +119,38 @@ useInfiniteScroll({
   hasNextPage: true,
   isFetchingNextPage: false,
   threshold: 1500,
-  useWindow: true,
 });
 ```
 
-## API
+## Props
 
-### `<DreamMasonry>` Props
+### `<DreamMasonry>`
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `items` | `T[]` | required | Array of items. Each must have `id: string` and optionally `width`/`height` or `aspectRatio` |
-| `renderItem` | `(item: T, index: number) => ReactNode` | required | Render function for each grid cell |
-| `maxColumnCount` | `number` | `5` | Maximum number of columns |
-| `minColumnCount` | `number` | `2` | Minimum number of columns |
-| `minColumnWidth` | `number` | `240` | Minimum column width in pixels before reducing column count |
-| `gutterSize` | `number` | `1.5` | Gap between items in pixels |
-| `isLoading` | `boolean` | `false` | Show loader state |
-| `hasMore` | `boolean` | `false` | Whether more items can be loaded |
-| `isFetchingMore` | `boolean` | `false` | Whether a load is in progress |
-| `onLoadMore` | `() => Promise<unknown>` | — | Called when scroll nears the bottom |
-| `scrollContainer` | `MutableRefObject<HTMLElement>` | — | Custom scroll container (defaults to window) |
-| `overscan` | `number` | `1000` | Pixels above/below viewport to pre-render |
-| `hysteresis` | `number` | `100` | Minimum scroll distance before re-calculating visible items |
-| `scrollThreshold` | `number` | `1500` | Distance from bottom in pixels to trigger `onLoadMore` |
-| `renderLoader` | `() => ReactNode` | — | Custom loading state |
-| `renderEmpty` | `() => ReactNode` | — | Custom empty state |
-| `className` | `string` | — | Container class |
-| `style` | `CSSProperties` | — | Container style (merged with internal styles) |
-
-### `useGrid` Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `items` | `T[]` | required | Array of grid items |
-| `maxColumnCount` | `number` | `5` | Maximum columns |
-| `minColumnCount` | `number` | `2` | Minimum columns |
-| `minColumnWidth` | `number` | `240` | Minimum column width in px |
-| `gutterSize` | `number` | `1.5` | Gap between items in px |
-| `overscan` | `number` | `1000` | Pre-render buffer in px |
-| `hysteresis` | `number` | `100` | Scroll threshold before update |
-| `scrollContainer` | `RefObject<HTMLElement>` | — | Custom scroll element |
-
-Returns: `{ containerRef, dimensions, positions, totalHeight, visibleItems, validItems }`
-
-### `usePositioner` Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `items` | `T[]` | required | Array of grid items |
-| `containerWidth` | `number` | required | Container width in px |
-| `maxColumnCount` | `number` | `5` | Maximum columns |
-| `minColumnCount` | `number` | `2` | Minimum columns |
-| `minColumnWidth` | `number` | `240` | Minimum column width in px |
-| `gutterSize` | `number` | `1.5` | Gap between items in px |
-
-Returns: `{ dimensions, positions, totalHeight, validItems }`
-
-### Item Shape
-
-Items must satisfy:
-
-```ts
-type GridItem = {
-  id: string;
-  width?: number;       // intrinsic width
-  height?: number;      // intrinsic height
-  aspectRatio?: number; // width / height (e.g. 16/9 = 1.778)
-};
-```
-
-The grid resolves item height in this order:
-1. **`width` + `height`** — calculates aspect ratio from dimensions
-2. **`aspectRatio`** — uses the ratio directly (useful when you only have the ratio, not raw dimensions)
-3. **Neither** — renders as a square
+| `items` | `T[]` | required | Array of items with `id` and optional `width`/`height`/`aspectRatio` |
+| `renderItem` | `(item, index) => ReactNode` | required | Render function for each cell |
+| `maxColumnCount` | `number` | `5` | Max columns |
+| `minColumnCount` | `number` | `2` | Min columns |
+| `minColumnWidth` | `number` | `240` | Min column width (px) before reducing count |
+| `gutterSize` | `number` | `1.5` | Gap between items (px) |
+| `hasMore` | `boolean` | `false` | More items available to load |
+| `onLoadMore` | `() => Promise` | — | Called when scroll nears bottom |
+| `scrollContainer` | `RefObject<HTMLElement>` | — | Custom scroll container (defaults to window) |
+| `overscan` | `number` | `1000` | Pre-render buffer above/below viewport (px) |
+| `hysteresis` | `number` | `100` | Min scroll distance before recalculating |
+| `scrollThreshold` | `number` | `1500` | Distance from bottom to trigger `onLoadMore` (px) |
+| `renderLoader` | `() => ReactNode` | — | Loading indicator |
+| `renderEmpty` | `() => ReactNode` | — | Empty state |
 
 ## How It Works
 
-1. **Column calculation** — Container width is divided into columns respecting `minColumnWidth`, `minColumnCount`, and `maxColumnCount` constraints, with configurable `gutterSize` gaps
-2. **Masonry positioning** — Items are placed in the shortest column using Float64Array for O(items x columns) layout
-3. **Viewport culling** — Only items intersecting `[scrollTop - overscan, scrollTop + viewportHeight + overscan]` are rendered
-4. **Scroll throttling** — A `requestAnimationFrame` loop checks scroll position, but only triggers a React update when the viewport moves more than the `hysteresis` threshold
-5. **Resize handling** — A debounced `ResizeObserver` recalculates column dimensions when the container width changes
+1. Container width gets divided into columns based on your min/max constraints
+2. Items go into the shortest column each time (classic masonry) — column heights tracked with `Float64Array`
+3. Only items in/near the viewport are in the DOM. Everything else is skipped
+4. Scroll position is checked once per `requestAnimationFrame`, but React only re-renders when you've scrolled past the `hysteresis` threshold
+5. A `ResizeObserver` recalculates columns when the container resizes
 
 ## License
 
-MIT
+MIT — made by [@adioof](https://github.com/adioof)
