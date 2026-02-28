@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { DreamMasonry } from 'dream-masonry';
+import Benchmark from './Benchmark';
 
 type Photo = {
   id: string;
@@ -28,14 +29,63 @@ function generateItems(start: number, count: number): Photo[] {
   });
 }
 
-export default function App() {
+function Nav({ page, setPage }: { page: string; setPage: (p: string) => void }) {
+  return (
+    <nav style={{ display: 'flex', gap: 16, marginBottom: 24, padding: '16px 16px 0' }}>
+      <button
+        onClick={() => setPage('demo')}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: page === 'demo' ? '#3498db' : '#666',
+          fontSize: 14,
+          fontWeight: page === 'demo' ? 700 : 400,
+          cursor: 'pointer',
+          padding: '4px 0',
+          borderBottom: page === 'demo' ? '2px solid #3498db' : '2px solid transparent',
+        }}
+      >
+        Demo
+      </button>
+      <button
+        onClick={() => setPage('benchmark')}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: page === 'benchmark' ? '#3498db' : '#666',
+          fontSize: 14,
+          fontWeight: page === 'benchmark' ? 700 : 400,
+          cursor: 'pointer',
+          padding: '4px 0',
+          borderBottom: page === 'benchmark' ? '2px solid #3498db' : '2px solid transparent',
+        }}
+      >
+        Benchmarks
+      </button>
+      <a
+        href="https://github.com/adioof/dream-masonry"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          marginLeft: 'auto',
+          color: '#666',
+          fontSize: 14,
+          textDecoration: 'none',
+        }}
+      >
+        GitHub ↗
+      </a>
+    </nav>
+  );
+}
+
+function Demo() {
   const [items, setItems] = useState<Photo[]>(() => generateItems(0, 50));
   const [hasMore, setHasMore] = useState(true);
   const [fetching, setFetching] = useState(false);
 
   const loadMore = useCallback(async () => {
     setFetching(true);
-    // Simulate network delay
     await new Promise((r) => setTimeout(r, 600));
     setItems((prev) => {
       const next = [...prev, ...generateItems(prev.length, 30)];
@@ -46,7 +96,7 @@ export default function App() {
   }, []);
 
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 16px 24px' }}>
       <div style={{ marginBottom: 32 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>
           DreamMasonry Demo
@@ -95,12 +145,24 @@ export default function App() {
           </div>
         )}
       />
-
-      {fetching && (
-        <div style={{ textAlign: 'center', padding: 24, color: '#888' }}>
-          Loading more...
-        </div>
-      )}
     </div>
+  );
+}
+
+export default function App() {
+  const [page, setPage] = useState(() => {
+    return window.location.hash === '#benchmark' ? 'benchmark' : 'demo';
+  });
+
+  const handleSetPage = useCallback((p: string) => {
+    setPage(p);
+    window.location.hash = p === 'demo' ? '' : p;
+  }, []);
+
+  return (
+    <>
+      <Nav page={page} setPage={handleSetPage} />
+      {page === 'benchmark' ? <Benchmark /> : <Demo />}
+    </>
   );
 }
