@@ -1,6 +1,6 @@
 {
   "name": "dream-masonry",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Virtualized masonry grid for React with infinite scroll",
   "type": "module",
   "main": "dist/index.cjs",
@@ -57,7 +57,11 @@
     "image-gallery",
     "responsive",
     "windowing",
-    "layout"
+    "layout",
+    "react-virtualized",
+    "infinite-scroll-grid",
+    "masonry-component",
+    "dream-masonry"
   ],
   "license": "MIT",
   "repository": {
