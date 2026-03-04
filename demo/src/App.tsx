@@ -203,9 +203,9 @@ export default function App() {
 
       {tab === 'benchmark' && (
         <>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>Interactive Benchmark</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>dream-masonry Benchmark</h2>
           <p style={{ color: '#888', fontSize: 14, margin: '0 0 24px' }}>
-            Renders 100 → 10,000 items and measures render time, DOM node count, and FPS in your browser.
+            Benchmarking <strong>dream-masonry</strong> — renders 100 to 10,000 items and measures render time, DOM node count, and FPS live in your browser. Install: <code style={{background:"#1c1c20",padding:"2px 6px",borderRadius:4,color:"#22c55e"}}>npm install dream-masonry</code>
           </p>
           <Benchmark />
         </>
