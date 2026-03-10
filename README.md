@@ -6,11 +6,11 @@
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/adioof)
 
-Virtualized masonry grid for React. Handles 10,000+ items without breaking a sweat — only the visible ones get rendered.
+A virtualized masonry grid for React. Manages 10,000+ items easily — only the visible ones render.
 
 **[Live demo](https://adioof.github.io/dream-masonry/)**
 
-If you've ever tried building a Pinterest-style layout and hit a wall with scroll performance, this is for you.
+If you've ever tried building a Pinterest-style layout and got frustrated with the scroll jank, this is for you.
 
 ## Install
 
@@ -40,17 +40,15 @@ function Gallery({ photos }) {
 }
 ```
 
-Items just need an `id` and either `width`/`height` or an `aspectRatio`. If you pass neither, they render as squares.
+Simply needs an `id` and either `width`/`height` or an `aspectRatio`. If you supply neither, it assumes squares.
 
 ## Why this over Masonic / react-masonry-css?
 
-Honest comparison:
+- **react-masonry-css** is awesome if you don't need virtualization. It's tiny (~3KB) and CSS-only. But it renders everything to the DOM, so it can't handle long lists.
+- **Masonic** offers virtualization, but no infinite scroll, and has a larger bundle.
+- **DreamMasonry** has virtualization, built-in infinite scroll, uses `Float64Array` for layout math, and ships at ~13KB with zero external dependencies (besides React).
 
-- **react-masonry-css** is great if you don't need virtualization. It's tiny (~3KB) and CSS-only. But it renders everything to the DOM, so it chokes on large lists.
-- **Masonic** does virtualization, but doesn't ship infinite scroll and has a bigger bundle with dependencies.
-- **DreamMasonry** virtualizes, has built-in infinite scroll, uses `Float64Array` for layout math, and ships at ~13KB with zero dependencies (besides React).
-
-Pick whatever fits. If you need virtualization + infinite scroll out of the box, that's where this library lives.
+Choose whatever makes the most sense for your needs. If you want virtualization + infinite scroll by default, this package is the one you want to use.
 
 ## Infinite Scroll
 
@@ -85,9 +83,9 @@ const scrollRef = useRef<HTMLDivElement>(null);
 
 ## Headless Hooks
 
-Don't want the component? Use the hooks directly.
+Don't like the component? Use the hooks directly.
 
-**`useGrid`** — full virtualization, you control the markup:
+**`useGrid`** — full virtualization with you providing the item markup:
 
 ```tsx
 import { useGrid } from 'dream-masonry';
@@ -99,7 +97,7 @@ const { containerRef, visibleItems, totalHeight } = useGrid({
 });
 ```
 
-**`usePositioner`** — layout math only, no DOM involved. Good for SSR, canvas, or testing:
+**`usePositioner`** — virtualization math only, nothing rendered. Good for SSR, canvas, or testing:
 
 ```tsx
 import { usePositioner } from 'dream-masonry';
@@ -111,7 +109,7 @@ const { positions, totalHeight } = usePositioner({
 });
 ```
 
-**`useInfiniteScroll`** — standalone infinite scroll, use it with anything:
+**`useInfiniteScroll`** — infinite scroll only, use with anything:
 
 ```tsx
 import { useInfiniteScroll } from 'dream-masonry';
@@ -147,11 +145,11 @@ useInfiniteScroll({
 
 ## How It Works
 
-1. Container width gets divided into columns based on your min/max constraints
-2. Items go into the shortest column each time (classic masonry) — column heights tracked with `Float64Array`
-3. Only items in/near the viewport are in the DOM. Everything else is skipped
-4. Scroll position is checked once per `requestAnimationFrame`, but React only re-renders when you've scrolled past the `hysteresis` threshold
-5. A `ResizeObserver` recalculates columns when the container resizes
+1. Your container width divides into columns based on your min/max constraints
+2. Items go into the shortest column (default masonry) — column heights tracked with `Float64Array`
+3. Only visible items are rendered. Everything else is skipped
+4. Scroll position is at most checked once per `requestAnimationFrame`, but React will only re-render if you've scrolled past the `hysteresis` threshold
+5. A `ResizeObserver` listens for container resizes
 
 ## License
 
